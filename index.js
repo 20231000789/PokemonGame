@@ -49,11 +49,28 @@ let trainer = {
         // Add an active Pokémon to the opponent's team
         opponentTrainer.activePokemon = opponentTrainer.pokemonTeam[0];
 
+        // Continue the battle until one side's Pokémon faints
         while (this.activePokemon && opponentPokemon) {
             // Trainer's turn
             let action = prompt("Select an action: attack or switch");
             if (action === "attack") {
+                // Player attacks opponent
                 this.attackOpponent(opponentTrainer);
+                // Check if opponent's Pokémon fainted after the attack
+                if (opponentPokemon.health <= 0) {
+                    console.log(`${opponentPokemon.name} fainted!`);
+                    opponentPokemon = null;
+                    this.activePokemon.addExp(50); // Reward the active Pokemon with experience points
+                    break;
+                }
+                // Opponent's turn
+                opponentTrainer.attackOpponent(this);
+                // Check if trainer's Pokémon fainted after the attack
+                if (this.activePokemon.health <= 0) {
+                    console.log(`${this.activePokemon.name} fainted!`);
+                    this.activePokemon = null;
+                    break;
+                }
             } else if (action === "switch") {
                 this.viewPokemonTeam();
                 let index = parseInt(prompt("Select a Pokémon to switch to (1, 2, etc.)")) - 1;
@@ -62,38 +79,10 @@ let trainer = {
                 console.log("Invalid action!");
                 continue;
             }
-            // Check if opponent's Pokémon fainted
-            if (opponentPokemon.health <= 0) {
-                console.log(`${opponentPokemon.name} fainted!`);
-                opponentPokemon = null;
-                this.activePokemon.addExp(50); // Reward the active Pokemon with experience points
-                break;
-            }
-            // Opponent's turn
-            let opponentAction;
-            if (opponentTrainer.activePokemon) {
-                opponentAction = "attack";
-            } else {
-                opponentAction = "switch";
-            }
-
-            if (opponentAction === "attack") {
-                opponentTrainer.attackOpponent(this);
-            } else {
-                let randomIndex = Math.floor(Math.random() * opponentTrainer.pokemonTeam.length);
-                opponentTrainer.switchPokemon(randomIndex);
-            }
-            // Check if trainer's Pokémon fainted
-            if (this.activePokemon.health <= 0) {
-                console.log(`${this.activePokemon.name} fainted!`);
-                this.activePokemon = null;
-                break;
-            }
         }
         console.log("Battle ended!");
     }
 };
-
 
 // Constructor function for creating pokemon
 function Pokemon(name, level, health) {
@@ -138,7 +127,8 @@ trainer.pokemonTeam.push(dorara);
 // Example usage of battle feature
 let opponentTrainer = {
     name: "Opponent",
-    pokemonTeam: [new Pokemon("Opponent's Pikachu", 10, 100)],
+    pokemonTeam: [new Pokemon("Dorara", 8, 90)], // Change this to include Dorara
+    activePokemon: null, // Initialize activePokemon to null
     switchPokemon: function(index) {
         if (index >= 0 && index < this.pokemonTeam.length) {
             this.activePokemon = this.pokemonTeam[index];
@@ -156,4 +146,5 @@ let opponentTrainer = {
     },
 };
 
-trainer.startBattle(opponentTrainer);
+// Instantly switch to the first Pokémon in the opponent's team
+opponentTrainer.switchPokemon(0);

@@ -1,9 +1,114 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>Activity: JavaScript Objects</title>
+    <title>Pokémon Battle</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin-top: 50px;
+        }
+        .pokemon-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .pokemon {
+            margin: 0 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        .battle-log {
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <script src="./index.js"></script>
+    <div class="container">
+        <h1>Your Pokémon Team</h1>
+        <div class="pokemon-container" id="pokemonTeam"></div>
+        <h1>Opponent's Pokémon</h1>
+        <div class="pokemon-container" id="opponentTeam"></div>
+        <button id="attack-btn" class="btn btn-primary">Attack</button>
+        <button id="switch-btn" class="btn btn-secondary">Switch Pokémon</button>
+        <div class="battle-log" id="battle-log"></div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="index.js"></script>
+    <script>
+        // Function to display Pokémon team on HTML
+        function displayPokemonTeam(team, elementId) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = "";
+            team.forEach((pokemon, index) => {
+                const pokemonDiv = document.createElement("div");
+                pokemonDiv.classList.add("pokemon");
+                pokemonDiv.textContent = `${pokemon.name} (Level ${pokemon.level}) - Health: ${pokemon.health}`;
+                pokemonDiv.addEventListener('click', () => {
+                    // When a Pokémon is clicked, switch to it
+                    trainer.switchPokemon(index);
+                    updatePokemonTeam(trainer.pokemonTeam, 'pokemonTeam');
+                });
+                container.appendChild(pokemonDiv);
+            });
+        }
+
+        // Function to update battle log on HTML
+        function updateBattleLog(message) {
+            const battleLogElement = document.getElementById('battle-log');
+            const p = document.createElement('p');
+            p.textContent = message;
+            battleLogElement.appendChild(p);
+            battleLogElement.scrollTop = battleLogElement.scrollHeight; // Scroll to bottom
+        }
+
+        // Function to update opponent's Pokémon display
+        function updateOpponentPokemon() {
+            const opponentPokemonElement = document.getElementById('opponentTeam');
+            opponentPokemonElement.innerHTML = "";
+            if (opponentTrainer.activePokemon) {
+                const pokemonDiv = document.createElement("div");
+                pokemonDiv.classList.add("pokemon");
+                pokemonDiv.textContent = `${opponentTrainer.activePokemon.name} (Level ${opponentTrainer.activePokemon.level}) - Health: ${opponentTrainer.activePokemon.health}`;
+                opponentPokemonElement.appendChild(pokemonDiv);
+            }
+        }
+
+        // Add event listener to attack button
+        document.getElementById('attack-btn').addEventListener('click', () => {
+            if (trainer.activePokemon) {
+                trainer.attackOpponent(opponentTrainer);
+                updateOpponentPokemon();
+                if (!opponentTrainer.activePokemon || opponentTrainer.activePokemon.health <= 0) {
+                    updateBattleLog(`${opponentTrainer.name}'s Pokémon fainted!`);
+                    opponentTrainer.activePokemon = null;
+                }
+            } else {
+                updateBattleLog('No active Pokémon to attack!');
+            }
+        });
+
+        // Add event listener to switch button
+        document.getElementById('switch-btn').addEventListener('click', () => {
+            let index = parseInt(prompt("Select a Pokémon to switch to (1, 2, etc.)")) - 1;
+            trainer.switchPokemon(index);
+            displayPokemonTeam(trainer.pokemonTeam, 'pokemonTeam');
+        });
+
+        // Update initial displays
+        displayPokemonTeam(trainer.pokemonTeam, 'pokemonTeam');
+        updateOpponentPokemon();
+
+        // Start battle
+        trainer.startBattle(opponentTrainer);
+    </script>
 </body>
 </html>
